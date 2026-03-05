@@ -131,14 +131,12 @@ spec:
     stage('Deploy to EKS') {
       steps {
         container('tools') {
-            sh '''
-              set -eux             
-
-              kubectl -n default get deploy tetris
-              kubectl -n default set image deployment/tetris tetris=${IMAGE_URI}
-              kubectl -n default rollout status deployment/tetris --timeout=180s
-            '''
-          }
+          sh '''
+            set -eux
+            kubectl -n default get deploy tetris
+            kubectl -n default set image deployment/tetris tetris=${IMAGE_URI}
+            kubectl -n default rollout status deployment/tetris --timeout=180s
+          '''
         }
       }
     }
