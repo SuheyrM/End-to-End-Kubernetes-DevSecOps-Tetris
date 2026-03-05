@@ -47,7 +47,7 @@ spec:
     sh '''
       set -eux
 
-      apk add --no-cache aws-cli curl tar
+      apk add --no-cache aws-cli curl tar kubectl
 
       # Install Trivy binary (no package manager dependency)
       TRIVY_VERSION="0.69.3"
@@ -99,7 +99,23 @@ spec:
       }
     }
   }
+   stage('Deploy to EKS') {
+      steps {
+        withCredentials([file(credentialsId: 'eks-kubeconfig', variable: 'KUBECONFIG')]) {
+          sh '''
+            set -eux
+            kubectl version --client
+            kubectl get deploy,svc
 
+            # Update deployment to the new image tag we just pushed
+            kubectl set image deployment/tetris tetris=${IMAGE_URI}
+
+            # Wait for rollout
+            kubectl rollout status deployment/tetris --timeout=180s
+          '''
+        }
+      }
+    }
   post {
     always {
       sh '''
