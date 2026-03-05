@@ -43,23 +43,19 @@ spec:
     }
 
     stage('Install tools (awscli + trivy)') {
-      steps {
-        sh '''
-          set -eux
+  steps {
+    sh '''
+      set -eux
 
-          # docker:*-cli is alpine-based
-          apk add --no-cache python3 py3-pip curl
-          pip3 install --no-cache-dir awscli
+      # Install tools from Alpine repos (no pip)
+      apk add --no-cache aws-cli trivy curl
 
-          # Install Trivy (Alpine package)
-          apk add --no-cache trivy
-
-          aws --version
-          trivy --version
-          docker version
-        '''
-      }
-    }
+      aws --version
+      trivy --version
+      docker version
+    '''
+  }
+}
 
     stage('Build Docker image') {
       steps {
