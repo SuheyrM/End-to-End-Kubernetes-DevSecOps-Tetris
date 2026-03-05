@@ -5,6 +5,7 @@ pipeline {
 apiVersion: v1
 kind: Pod
 spec:
+  serviceAccountName: jenkins-deployer
   containers:
   - name: tools
     image: docker:27.3-cli
@@ -130,14 +131,8 @@ spec:
     stage('Deploy to EKS') {
       steps {
         container('tools') {
-          withCredentials([file(credentialsId: 'eks-kubeconfig', variable: 'KCFG')]) {
             sh '''
-              set -eux
-
-              export KUBECONFIG="$KCFG"
-
-              kubectl config current-context
-              kubectl get nodes
+              set -eux             
 
               kubectl -n default get deploy tetris
               kubectl -n default set image deployment/tetris tetris=${IMAGE_URI}
