@@ -119,19 +119,25 @@ spec:
     }
 
     stage('Deploy to EKS') {
-      steps {
-        withCredentials([file(credentialsId: 'eks-kubeconfig', variable: 'KUBECONFIG')]) {
-          sh '''
-            set -eux
+  steps {
+    withCredentials([file(credentialsId: 'eks-kubeconfig', variable: 'KCFG')]) {
+      sh '''
+        set -eux
 
-            kubectl get deploy tetris
-            kubectl set image deployment/tetris tetris=${IMAGE_URI}
-            kubectl rollout status deployment/tetris --timeout=180s
-          '''
-        }
-      }
+        # Force kubectl to use the uploaded kubeconfig
+        export KUBECONFIG="$KCFG"
+
+        kubectl config current-context
+        kubectl get nodes
+
+        # Tetris is in the default namespace
+        kubectl -n default get deploy tetris
+        kubectl -n default set image deployment/tetris tetris=${IMAGE_URI}
+        kubectl -n default rollout status deployment/tetris --timeout=180s
+      '''
     }
   }
+}
 
   post {
     always {
