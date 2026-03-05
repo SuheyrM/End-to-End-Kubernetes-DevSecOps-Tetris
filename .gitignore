@@ -1,0 +1,14 @@
+# Terraform
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.*
+**/crash.log
+**/crash.*.log
+
+# Local kube/helm junk (optional)
+*.log
+
+# OS/editor
+.DS_Store
+.vscode/

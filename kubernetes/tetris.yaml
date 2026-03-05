@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tetris
+  labels:
+    app: tetris
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tetris
+  template:
+    metadata:
+      labels:
+        app: tetris
+    spec:
+      containers:
+        - name: tetris
+          image: 972598852792.dkr.ecr.us-east-1.amazonaws.com/tetris-app:latest
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tetris-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: tetris
+  ports:
+    - port: 80
+      targetPort: 80

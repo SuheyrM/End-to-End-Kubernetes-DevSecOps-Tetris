@@ -1,0 +1,6 @@
+:root { font-family: system-ui, Arial; }
+body { display:flex; justify-content:center; margin:0; background:#0b1220; color:#e6e6e6; }
+.wrap { padding:24px; text-align:center; }
+canvas { background:#111827; border:2px solid #334155; border-radius:10px; }
+.panel { margin-top:12px; display:flex; justify-content:space-between; gap:16px; }
+.hint { opacity:.8; font-size: 14px; }
