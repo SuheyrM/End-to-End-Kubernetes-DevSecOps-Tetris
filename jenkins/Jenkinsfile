@@ -47,12 +47,16 @@ spec:
     sh '''
       set -eux
 
-      # Install tools from Alpine repos (no pip)
-      apk add --no-cache aws-cli trivy curl
+      apk add --no-cache aws-cli curl tar
+
+      # Install Trivy binary (no package manager dependency)
+      TRIVY_VERSION="0.69.3"
+      curl -sSL -o /tmp/trivy.tar.gz https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
+      tar -xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy
+      trivy --version
 
       aws --version
-      trivy --version
-      docker version
+      docker version || true
     '''
   }
 }
