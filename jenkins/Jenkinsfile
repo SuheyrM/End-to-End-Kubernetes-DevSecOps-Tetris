@@ -42,24 +42,43 @@ spec:
       }
     }
 
-    stage('Install tools (awscli + trivy)') {
-  steps {
-    sh '''
-      set -eux
+    stage('Install tools (awscli + trivy + kubectl)') {
+      steps {
+        sh '''
+          set -eux
 
-      apk add --no-cache aws-cli curl tar kubectl
+          apk add --no-cache aws-cli curl tar kubectl
 
-      # Install Trivy binary (no package manager dependency)
-      TRIVY_VERSION="0.69.3"
-      curl -sSL -o /tmp/trivy.tar.gz https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
-      tar -xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy
-      trivy --version
+          # Install Trivy binary
+          TRIVY_VERSION="0.69.3"
+          curl -sSL -o /tmp/trivy.tar.gz https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
+          tar -xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy
 
-      aws --version
-      docker version || true
-    '''
-  }
-}
+          aws --version
+          kubectl version --client
+          trivy --version
+        '''
+      }
+    }
+
+    stage('Wait for Docker daemon') {
+      steps {
+        sh '''
+          set -eux
+          for i in $(seq 1 30); do
+            if docker info >/dev/null 2>&1; then
+              echo "Docker daemon is ready"
+              exit 0
+            fi
+            echo "Waiting for Docker daemon... ($i/30)"
+            sleep 2
+          done
+          echo "Docker daemon never became ready"
+          docker version || true
+          exit 1
+        '''
+      }
+    }
 
     stage('Build Docker image') {
       steps {
@@ -98,24 +117,22 @@ spec:
         }
       }
     }
-  }
-   stage('Deploy to EKS') {
+
+    stage('Deploy to EKS') {
       steps {
         withCredentials([file(credentialsId: 'eks-kubeconfig', variable: 'KUBECONFIG')]) {
           sh '''
             set -eux
-            kubectl version --client
-            kubectl get deploy,svc
 
-            # Update deployment to the new image tag we just pushed
+            kubectl get deploy tetris
             kubectl set image deployment/tetris tetris=${IMAGE_URI}
-
-            # Wait for rollout
             kubectl rollout status deployment/tetris --timeout=180s
           '''
         }
       }
     }
+  }
+
   post {
     always {
       sh '''
