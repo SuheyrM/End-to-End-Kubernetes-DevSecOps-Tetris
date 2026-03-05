@@ -1,0 +1,58 @@
+pipeline {
+  agent any
+
+  environment {
+    AWS_REGION   = "us-east-1"
+    ECR_REGISTRY = "972598852792.dkr.ecr.us-east-1.amazonaws.com"
+    ECR_REPO     = "tetris-app"
+    IMAGE_TAG    = "${env.BUILD_NUMBER}"
+    IMAGE_URI    = "${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Build Docker image') {
+      steps {
+        sh 'docker build -t tetris-app:ci .'
+      }
+    }
+
+    stage('Trivy scan (fail on CRITICAL)') {
+      steps {
+        sh '''
+          trivy image --exit-code 1 --severity CRITICAL tetris-app:ci
+          trivy image --severity HIGH,CRITICAL tetris-app:ci
+        '''
+      }
+    }
+
+    stage('Login to ECR + Push') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'aws-ecr-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+          sh '''
+            aws --version
+            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+
+            docker tag tetris-app:ci ${IMAGE_URI}
+            docker push ${IMAGE_URI}
+
+            # also update :latest
+            docker tag tetris-app:ci ${ECR_REGISTRY}/${ECR_REPO}:latest
+            docker push ${ECR_REGISTRY}/${ECR_REPO}:latest
+          '''
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      sh 'docker images | head -n 20 || true'
+    }
+  }
+}
