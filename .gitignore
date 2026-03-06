@@ -1,4 +1,14 @@
 # Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Local kube config
+.kube/
+
+# Logs
+*.log# Terraform
 **/.terraform/
 **/.terraform.lock.hcl
 **/terraform.tfstate

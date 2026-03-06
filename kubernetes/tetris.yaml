@@ -4,6 +4,11 @@ metadata:
   name: tetris
   labels:
     app: tetris
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: tetris=972598852792.dkr.ecr.us-east-1.amazonaws.com/tetris-app
+    argocd-image-updater.argoproj.io/tetris.allow-tags: regexp:^\d+$
+    argocd-image-updater.argoproj.io/tetris.update-strategy: latest
+    argocd-image-updater.argoproj.io/write-back-method: git
 spec:
   replicas: 1
   selector:
@@ -16,14 +21,14 @@ spec:
     spec:
       containers:
         - name: tetris
-          image: 972598852792.dkr.ecr.us-east-1.amazonaws.com/tetris-app:latest
+          image: 972598852792.dkr.ecr.us-east-1.amazonaws.com/tetris-app:17
           ports:
             - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: tetris-svc
+  name: tetris
 spec:
   type: LoadBalancer
   selector:
